@@ -6,6 +6,7 @@ class Song(models.Model):
     cover = models.URLField(null=True, blank=True)
     source = models.URLField(null=False)
     album = models.ForeignKey('music.album', on_delete=models.CASCADE, null=True)
+    listened = models.IntegerField(default=0)
 
     # class Meta:
     #     unique_together = ('title','cover')

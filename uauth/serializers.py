@@ -1,11 +1,15 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(default='student', write_only=True)
+    Choice = (
+        ('student', 'student'),
+        ('teacher', 'teacher'),
+    )
+    role = serializers.ChoiceField(choices=Choice, default='student', write_only=True)
     password = serializers.CharField(write_only=True)
     token = serializers.CharField(max_length=255, read_only=True)
 
@@ -21,6 +25,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
         )
+        g = Group.objects.get(name=validated_data['role'])
+        user.groups.add(g)
         return user
 
 
@@ -28,11 +34,18 @@ class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
     token = serializers.CharField(max_length=255, read_only=True)
+    role = serializers.SerializerMethodField(read_only=True)
+
+    def get_role(self, obj):
+        try:
+            role = obj.groups.all()[0].name
+        except:
+            role = 'student'
+        return role
 
     def validate(self, data):
         username = data.get('username')
         password = data.get('password')
-
 
         if username and password:
             user = User.objects.filter(username=username).first()
