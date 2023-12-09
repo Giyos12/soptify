@@ -67,3 +67,10 @@ class SongModelSerializers(serializers.ModelSerializer):
         model = Song
         fields = '__all__'
 
+
+# class SearchReadOnlySerializers(serializers.ModelSerializer):
+#     oxshash = serializers.FloatField()
+#
+#     class Meta:
+#         model = Song
+#         fields = ('title', 'cover', 'source', 'listened', 'oxshash')

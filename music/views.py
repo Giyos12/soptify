@@ -5,6 +5,8 @@ from .serializers import SongModelSerializers
 from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 from rest_framework.pagination import LimitOffsetPagination
+from django.contrib.postgres.search import TrigramSimilarity
+
 
 # class SongAPIView(APIView):
 #     def get(self, request):
@@ -59,3 +61,22 @@ class SongViewSet(ModelViewSet):
         songs = Song.objects.all().order_by('-listened')[:3]
         serializers = SongModelSerializers(songs, many=True)
         return Response(serializers.data)
+
+    @action(detail=False, methods=['GET'])
+    def search(self, request):
+        song_list = []
+        q = request.query_params.get('q', None)
+        if q is None:
+            return Response({'message': 'q parametrini berish kerak'}, status=400)
+        songs = Song.objects.annotate(similarity=TrigramSimilarity('title', q)).filter(similarity__gt=0.1).order_by(
+            '-similarity')
+        for song in songs:
+            dict1 = {
+                'title': song.title,
+                'cover': song.cover,
+                'source': song.source,
+                'listened': song.listened,
+                'similarity': song.similarity
+            }
+            song_list.append(dict1)
+        return Response(song_list)
