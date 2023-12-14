@@ -5,13 +5,13 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
     ]
 
     operations = [
+        migrations.RunSQL('CREATE EXTENSION IF NOT EXISTS pg_trgm;'),
         migrations.CreateModel(
             name='Album',
             fields=[

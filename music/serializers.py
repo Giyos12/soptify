@@ -67,10 +67,16 @@ class SongModelSerializers(serializers.ModelSerializer):
         model = Song
         fields = '__all__'
 
+    def validate_source(self, value):
+        if not str(value).endswith('.mp3'):
+            raise ValidationError(detail='mp3 bilan tugasin')
+        return value
 
-# class SearchReadOnlySerializers(serializers.ModelSerializer):
-#     oxshash = serializers.FloatField()
-#
-#     class Meta:
-#         model = Song
-#         fields = ('title', 'cover', 'source', 'listened', 'oxshash')
+
+class SearchSongSerializers(serializers.Serializer):
+    title = serializers.CharField(max_length=200)
+    cover = serializers.URLField(required=True)
+    source = serializers.URLField(required=True)
+    album = AlbumGetSerializers()
+    listened = serializers.IntegerField()
+    similarity = serializers.FloatField()

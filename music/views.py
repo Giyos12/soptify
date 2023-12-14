@@ -1,11 +1,13 @@
+from drf_yasg import openapi
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Song
-from .serializers import SongModelSerializers
+from .serializers import SongModelSerializers, SearchSongSerializers
 from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 from rest_framework.pagination import LimitOffsetPagination
 from django.contrib.postgres.search import TrigramSimilarity
+from drf_yasg.utils import swagger_auto_schema
 
 
 # class SongAPIView(APIView):
@@ -62,6 +64,9 @@ class SongViewSet(ModelViewSet):
         serializers = SongModelSerializers(songs, many=True)
         return Response(serializers.data)
 
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('q', openapi.IN_QUERY, description='Search parametr', type=openapi.TYPE_STRING)],
+        tags=['Search'])
     @action(detail=False, methods=['GET'])
     def search(self, request):
         song_list = []
@@ -70,13 +75,14 @@ class SongViewSet(ModelViewSet):
             return Response({'message': 'q parametrini berish kerak'}, status=400)
         songs = Song.objects.annotate(similarity=TrigramSimilarity('title', q)).filter(similarity__gt=0.1).order_by(
             '-similarity')
-        for song in songs:
-            dict1 = {
-                'title': song.title,
-                'cover': song.cover,
-                'source': song.source,
-                'listened': song.listened,
-                'similarity': song.similarity
-            }
-            song_list.append(dict1)
-        return Response(song_list)
+        # for song in songs:
+        #     dict1 = {
+        #         'title': song.title,
+        #         'cover': song.cover,
+        #         'source': song.source,
+        #         'listened': song.listened,
+        #         'similarity': song.similarity
+        #     }
+        #     song_list.append(dict1)
+        serializers = SearchSongSerializers(songs, many=True)
+        return Response(serializers.data)
